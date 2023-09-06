@@ -40,15 +40,15 @@
   (major1) == 1 && (major2) <  3 || \
   (major1) == 1 && (major2) == 3 && (minor) <= 0)
 #endif /* MIN_VERSION_parser_combinators */
-/* package text-2.0.2 */
+/* package text-1.2.5.0 */
 #ifndef VERSION_text
-#define VERSION_text "2.0.2"
+#define VERSION_text "1.2.5.0"
 #endif /* VERSION_text */
 #ifndef MIN_VERSION_text
 #define MIN_VERSION_text(major1,major2,minor) (\
-  (major1) <  2 || \
-  (major1) == 2 && (major2) <  0 || \
-  (major1) == 2 && (major2) == 0 && (minor) <= 2)
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  2 || \
+  (major1) == 1 && (major2) == 2 && (minor) <= 5)
 #endif /* MIN_VERSION_text */
 
 /* tool gcc-10.2.0 */

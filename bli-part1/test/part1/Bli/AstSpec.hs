@@ -9,14 +9,13 @@ import Test.HUnit (assertFailure)
 import Test.Hspec
 
 assertParseFailure :: IO a
-assertParseFailure = assertFailure "could not parse test expression"
+assertParseFailure = assertFailure "could not parse test expression"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 
 spec :: Spec
 spec = do
   describe "simple expressions" $ do
     it "should produce a number" $ do
       parse pExpr "" "1" `shouldBe` Right (ExprLit $ LitNum 1.0)
-
     it "should produce a boolean" $ do
       parse pExpr "" "true" `shouldBe` Right (ExprLit $ LitBool True)
 
@@ -66,7 +65,7 @@ spec = do
   describe "stringifying expressions" $ do
     it "should support numbers" $ do
       case parse pExpr "" "42" of
-        Right expr -> do
+        Right expr -> do 
           stringify expr `shouldBe` "42"
         Left _ -> assertParseFailure
     it "should support nested arithmetic" $ do
@@ -78,4 +77,4 @@ spec = do
       case parse pExpr "" "(true and false) or ((100.4 < 90.1234) and !(true and true))" of
         Right expr -> do
           stringify expr `shouldBe` "(true and false) or ((100.4 < 90.1234) and !(true and true))"
-        Left _ -> assertParseFailure
+        Left _ -> assertParseFailure 
