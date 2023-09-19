@@ -1,0 +1,24 @@
+Test suite spec: RUNNING...
+
+Bli.Ast
+  simple expressions
+    should produce a number [v]
+    should produce a boolean [v]
+  nested expressions
+    should produce a nested arithmetic expression [v]
+    should produce a nested logic expression [v]
+  stringifying expressions
+    should support numbers [v]
+    should support nested arithmetic [v]
+    should support logic expressions [v]
+  evaluating expressions
+    should support arithmetic expressions [v]
+    should support boolean expressions [v]
+    should should produce type errors [v]
+    should correctly implement truthiness for nil [v]
+    should correctly implement truthiness for numbers and strings [v]
+
+Finished in 0.0021 seconds
+12 examples, 0 failures
+Test suite spec: PASS
+Test suite logged to: C:\Users\rmr60\CodeSandbox\csci305-bli\bli-part2\dist-newstyle\build\x86_64-windows\ghc-9.2.8\bli-0.1.0.0\t\spec\test\bli-0.1.0.0-spec.log
