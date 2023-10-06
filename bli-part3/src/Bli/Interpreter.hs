@@ -13,9 +13,6 @@ import Bli.Ast (
  )
 
 import Prelude hiding (putStr, putStrLn)
---OLD
---import Control.Monad.Except (ExceptT, runExceptT, throwError)
---import Control.Monad.State (MonadIO (..), StateT (runStateT), gets, modify)
 import Control.Monad.Except (ExceptT, runExceptT, throwError, MonadError)
 import Control.Monad.State (MonadIO (..), StateT (runStateT), gets, modify, MonadState)
 import Data.Foldable (traverse_)
@@ -29,9 +26,6 @@ import Control.Applicative ((<|>))
 import Data.Text (Text)
 import qualified Data.Text as T
 import System.IO (stdout, hFlush)
-import GHC.TypeLits (ErrorMessage(Text))
-import qualified GHC.IO.Buffer as Hashmap
-import GHC.Conc (numSparks)
 
 
 type Mapping = HashMap Var Expr
@@ -55,7 +49,7 @@ lookupLocalVar envs var =
     [] -> Nothing
     x : _ -> Just x
 
--- | There is aloways a base global environment
+-- | There is always a base global environment
 -- and there is always an active environment used for
 -- assignments.
 --
@@ -91,9 +85,6 @@ initialInterpreterState =
     , output = []
     }
 
---OLD
---type Interpreter = StateT InterpreterState IO
---type Interpreter = ExceptT ErrorMsg (StateT InterpreterState IO)
 newtype Interpreter a = Interpreter
   { unInterpreter :: ExceptT ErrorMsg (StateT InterpreterState IO) a
   }
@@ -106,10 +97,6 @@ newtype Interpreter a = Interpreter
     , MonadIO
     , MonadState InterpreterState
     )
-
--- OLD 
--- runInterpreter :: ExceptT e (StateT s IO) a -> s -> IO (Either e a, s)
--- runInterpreter = runStateT . runExceptT
 
 runInterpreter :: Interpreter a -> InterpreterState -> IO (Either ErrorMsg a, InterpreterState)
 runInterpreter = runStateT . runExceptT . unInterpreter
@@ -186,29 +173,23 @@ writeOutLn str = writeOut $ str <> "\n"
 
 pushEnv :: Interpreter ()
 pushEnv = do 
-  lEnvs <- gets localEnvs
-  --let numLocalEnvs = fromIntegral (length lEnvs)
-  --writeOutLn $ stringify (ExprLit (LitStr "calling push env"))
-  --writeOutLn $ stringify (ExprLit (LitStr "num local envs"))
-  --writeOutLn $ stringify (ExprLit (LitNum numLocalEnvs))
-  --writeOutLn $ stringify (ExprLit (LitStr "calling push env"))
   modify (\s -> s{localEnvs = LocalEnv HMap.empty : localEnvs s})
 
 popEnv :: Interpreter ()
 popEnv = do
     lEnvs <- gets localEnvs
-    gEnvs <- gets globalEnv 
     case lEnvs of
       [] -> return ()
-      -- _x :: LocalEnv, xs :: [LocalEnv]
       (_x:xs) -> do
-        --writeOutLn $ stringify (ExprLit (LitStr "popping an environment"))
-        let numLocalEnvs = fromIntegral (length lEnvs)
-        --writeOutLn $ stringify (ExprLit (LitNum numLocalEnvs))
+        let numLocalEnvs = length lEnvs
         if numLocalEnvs == 1
           then 
+            -- set the localEnvs list to blank because 
+            -- we're done using the environment
             modify (\s -> s{localEnvs = []})
           else do 
+            -- pop the environment by reseting the localEnvs 
+            -- to the tail, without the head
             modify (\s -> s{localEnvs = xs})
 
 addError :: ErrorMsg -> Interpreter ()
@@ -230,16 +211,10 @@ defVar var expr = do
   case lEnvs of 
   -- in the case that localEnvs is empty [], set the var in the global env 
     [] -> do 
-      -- DEBUGGING
-      --writeOutLn $ stringify (ExprLit (LitStr "adding a var to the global environment"))
-      --writeOutLn $ stringify expr
       gEnvs <- gets globalEnv 
       modify ( \s -> s{globalEnv = gEnvs{gMapping = HMap.insert var expr (gMapping gEnvs)}})
   -- if local env, get the head and add a new var to the hmap
     x : xs -> do
-      -- DEBUGGING
-      --writeOutLn $ stringify (ExprLit (LitStr "adding a variable to the local environment"))
-      --writeOutLn $ stringify expr
       modify ( \s -> s{localEnvs = x{lMapping = HMap.insert var expr (lMapping x)} : xs})
 
 -- | Assign a new value to an existing variable. If the variable does not exist,
