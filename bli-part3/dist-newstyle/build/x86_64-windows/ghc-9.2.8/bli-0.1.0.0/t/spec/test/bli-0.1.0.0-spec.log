@@ -29,7 +29,7 @@ Bli.Interpreter
     should error when variable is not in scope [v]
     should initialize a variable without a definition to nil [v]
 
-Finished in 0.0050 seconds
+Finished in 0.0098 seconds
 20 examples, 0 failures
 Test suite spec: PASS
 Test suite logged to: C:\Users\rmr60\CodeSandbox\csci305-bli\bli-part3\dist-newstyle\build\x86_64-windows\ghc-9.2.8\bli-0.1.0.0\t\spec\test\bli-0.1.0.0-spec.log

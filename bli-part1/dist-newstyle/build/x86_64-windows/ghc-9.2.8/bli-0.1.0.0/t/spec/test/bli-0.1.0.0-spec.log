@@ -10,9 +10,20 @@ Bli.Ast
   stringifying expressions
     should support numbers [v]
     should support nested arithmetic [v]
-    should support logic expressions [v]
+    should support logic expressions [x]
 
-Finished in 0.0017 seconds
-7 examples, 0 failures
-Test suite spec: PASS
+Failures:
+
+  test\part1\Bli\AstSpec.hs:79:26: 
+  1) Bli.Ast, stringifying expressions, should support logic expressions
+       expected: "(true and false) or ((100.4 < 90.1234) and !(true and true))"
+        but got: "(tru and false) or ((100.4 < 90.1234) and !(tru and tru))"
+
+  To rerun use: --match "/Bli.Ast/stringifying expressions/should support logic expressions/"
+
+Randomized with seed 1678749003
+
+Finished in 0.0042 seconds
+7 examples, 1 failure
+Test suite spec: FAIL
 Test suite logged to: C:\Users\rmr60\CodeSandbox\csci305-bli\bli-part1\dist-newstyle\build\x86_64-windows\ghc-9.2.8\bli-0.1.0.0\t\spec\test\bli-0.1.0.0-spec.log
