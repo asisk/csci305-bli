@@ -14,7 +14,7 @@ import Bli.Ast
 import Bli.Error (ErrorMsg)
 import Control.Monad (void, when)
 --the following is a HINT for TODO
-import Data.Maybe (isNothing, isJust, fromMaybe, catMaybes)
+import Data.Maybe (isNothing, fromMaybe, catMaybes)
 
 type Parser = Parsec ErrorMsg Text
 
@@ -153,33 +153,17 @@ pStmtFor = do
   when (isNothing mInit) (void $ symbol ";")
   -- Parse the optional condition expression
   mCond <- try . optional $ pExpr
-  -- if (isJust mCond) (fromMaybe mCond) (True)
   void $ symbol ";"
   -- Parse the optional increment expression
   mIncr <- try . optional $ pExpr
   void $ symbol ")"
   body <- pStmt
-    -- TODO: Rewrite the parsed for-loop as a while-loop.
-  --       Review CI (https://craftinginterpreters.com/control-flow.html#desugaring)
-  --       to see how a for-loop can be rewritten as a while-loop.
-  --       
-  --       Replace the StmtPrint being returned here with either a StmtWhile or StmtBlock
-  --       which implements the for-loop.
-
-  let bodyBlock = case mIncr of
-      Just incr -> StmtBlock [body, i]
-      Nothing -> StmtBlock [body]
-  
-  let whileBlock = case mCond of 
-      Just c -> StmtWhile mCond bodyBlock
-      Nothing -> StmtWhile True bodyBlock
-  
-  let whileStmt = case mInit of
-        Just initStmt -> StmtBlock [initStmt, whileBlock]
-        Nothing -> whileBlock
+  let bodyBlock = StmtBlock $ catMaybes [Just body, StmtExpr <$> mIncr]  
+  let cond = fromMaybe (PExprLit (LitBool True)) mCond
+  let while = StmtWhile cond bodyBlock
+  let whileStmt = StmtBlock $ catMaybes [mInit, Just while]
 
   return whileStmt
-
 
 pStmtIf :: Parser (Stmt PExpr)
 pStmtIf = do

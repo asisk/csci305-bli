@@ -23,7 +23,7 @@ import Data.Text.IO (putStr)
 import Control.Monad (when, void)
 import Bli.Analysis (parseExpr)
 import Bli.Error (ErrorMsg (ErrorMsg), mkErrorMsg)
-import Data.Maybe (mapMaybe)
+import Data.Maybe (mapMaybe, catMaybes, fromMaybe)
 import Control.Applicative ((<|>))
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -156,17 +156,18 @@ execute stmt = do
       pushEnv
       traverse_ execute stmts
       popEnv
-    StmtIf cond tBody fBodyOpt -> do    
+    StmtIf cond tBody fBodyOpt -> do
       -- Evaluate the condition
+      result <- eval cond
       if isTruthy result then
-      -- If result is truthy, execute the true-body
+        -- If result is truthy, execute the true-body
         execute tBody
       else
-      -- Else result is not-truthy and execute the optional false-body
+        -- Else result is not-truthy and execute the optional false-body
         case fBodyOpt of
-          Just stmt -> do
-            execute stmt
-          --Nothing -> Nothing
+          Just s -> do
+            execute s
+          Nothing -> return ()
       return ()
     StmtWhile cond body ->
       whileM_ (fmap isTruthy . eval $ cond) (execute body)
