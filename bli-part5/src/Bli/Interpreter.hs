@@ -26,7 +26,7 @@ import Data.Maybe (mapMaybe)
 import Control.Applicative ((<|>))
 import Data.Text (Text)
 import qualified Data.Text as T
-import System.IO (stdout, hFlush)
+import System.IO (stdout, hFlush, putStrLn)
 import Control.Monad.Loops (whileM_)
 import Data.IORef (readIORef, newIORef, writeIORef)
 
@@ -179,7 +179,9 @@ execute stmt = do
       defVar name (ExprFunc func)
     StmtReturn result -> do
       result' <- eval result
+      -- put the expression into the interpreter state
       modify (\s -> s{returnVal = result'})
+      -- throw the Goto to intentionally exit
       throwError Goto
 
 pushEnv :: Interpreter ()
@@ -309,31 +311,39 @@ eval expr = do
           
           -- All arguments were provided
           else do
-            -- Wrap arguments inside `IORef`s to place them in an environment
+            -- Wrap arguments inside `IORef`s to prepare them to be placed into an environment mapping
             argsRefs <- traverse (liftIO . newIORef) args'
             
-            -- Create an environment to link the formal parameters with
-            -- function call arguments
-
-            -- TODO: Follow the cue from the preceding comment.
-            --       Define a `LocalEnv` that maps formal parameters (`fParams`)
-            --       to arguments (`argsRefs`).
-
+            -- Create an environment to link the formal parameters with function call arguments
+            -- Define a `LocalEnv` that contains the mapping of parameters to arguments
+            -- maps formal parameters (`fParams`) to arguments (`argsRefs`) using zip 
+            let varArgs = zip fParams argsRefs
+            -- uses HashMap fromList method to put the varArgs into a mapping
+            let updatedfunctionEnv = LocalEnv (HMap.fromList varArgs) : fLEnvs
+            
             -- We want to restore the environment after the function call,
             -- so save global and local environments at time of function call
             progGEnv <- gets globalEnv
             progLEnvs <- gets localEnvs
 
             -- Install function environments into interpreter state
-            -- using `modify`. Be sure to place the `LocalEnv` mapping 
-            -- formal parameters and arguments at the top of the stack
+            -- using `modify`. Be sure to place the `LocalEnv`, mapping 
+            -- formal parameters and arguments, at the top of the stack
             -- of local environment blocks.
             
-            -- TODO: Follow the cue from the preceding comment.
-            --       Use `fGenv`, `fLEnvs`, and the `LocalEnv` you defined
-            --       that maps formal paramaters to arguments to specify
-            --       the `globalEnv` and `localEnvs` that should be used
-            --       when executing the function body.
+            -- Use `fGenv`, `fLEnvs`, and the `LocalEnv` you defined
+            -- that maps formal paramaters to arguments to specify
+            -- the `globalEnv` and `localEnvs` that should be used
+            -- when executing the function body.
+            -- modify (\s -> s{localEnvs = fLEnv : localEnvs s})
+
+            modify
+                ( \s ->
+                    s
+                      { globalEnv = fGEnv
+                      , localEnvs = updatedfunctionEnv
+                      }
+                )
 
             -- Execute statement block associated with function
             catchError (execute fBody) 
@@ -347,8 +357,8 @@ eval expr = do
             -- TODO: Retrieve the function result from the `InterpreterState`
             --       The return result is stored in the `InterpreterState` when
             --       executing the `StmtReturn` statement.
-            retVal <- return . ExprLit $ LitNil -- <- Replace this definition as part of the TODO
-
+            -- retVal <- return . ExprLit $ LitNil -- <- Replace this definition as part of the TODO
+            retVal <- gets returnVal
             -- Reinstate program environments in interpreter state
             -- using `modify`
             modify
@@ -370,7 +380,10 @@ eval expr = do
 createPartial :: Func Expr -> [Expr] -> Expr
 createPartial f args = 
   -- TODO: Implement this function
+  -- ExprFunc f@(Func fParams fBody fGEnv fLEnvs)
+  --params = args
   undefined
+  -- return f
 
 evalUnary :: UnOp -> Expr -> Interpreter Expr
 evalUnary UnNeg x = do
