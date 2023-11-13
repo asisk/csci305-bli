@@ -29,6 +29,8 @@ import qualified Data.Text as T
 import System.IO (stdout, hFlush, putStrLn)
 import Control.Monad.Loops (whileM_)
 import Data.IORef (readIORef, newIORef, writeIORef)
+import qualified Debug.Trace as Debug
+import qualified Control.Monad.RWS as HMap
 
 -- | Recursively check for the `Var` value in the local
 -- environments. Once the nested local environments are exhausted,
@@ -307,7 +309,7 @@ eval expr = do
           if length args' < length fParams then
             -- Return a new ExprFunc with fewer parameters and appropriate
             -- environment for previously provided arguments
-            return $ createPartial f args'
+            return $ createPartial f args' 
           
           -- All arguments were provided
           else do
@@ -335,8 +337,6 @@ eval expr = do
             -- that maps formal paramaters to arguments to specify
             -- the `globalEnv` and `localEnvs` that should be used
             -- when executing the function body.
-            -- modify (\s -> s{localEnvs = fLEnv : localEnvs s})
-
             modify
                 ( \s ->
                     s
@@ -353,12 +353,10 @@ eval expr = do
                 _ -> throwError e)
 
             -- Get function result
-            
-            -- TODO: Retrieve the function result from the `InterpreterState`
-            --       The return result is stored in the `InterpreterState` when
-            --       executing the `StmtReturn` statement.
-            -- retVal <- return . ExprLit $ LitNil -- <- Replace this definition as part of the TODO
+            -- The return result is stored in the `InterpreterState` when
+            -- executing the `StmtReturn` statement.
             retVal <- gets returnVal
+
             -- Reinstate program environments in interpreter state
             -- using `modify`
             modify
@@ -378,12 +376,12 @@ eval expr = do
 -- an `ExprFunc` wrapper that calls the original function using
 -- the partially-applied arguments.
 createPartial :: Func Expr -> [Expr] -> Expr
-createPartial f args = 
-  -- TODO: Implement this function
-  -- ExprFunc f@(Func fParams fBody fGEnv fLEnvs)
-  --params = args
-  undefined
-  -- return f
+createPartial f@(Func fParams fBody fGEnv fLEnvs) args = 
+  let shortParams = drop (length args) fParams
+      adjArgs = args ++ fmap ExprVar shortParams
+      newBody = StmtReturn (ExprCall (ExprFunc f) adjArgs)
+  in
+      ExprFunc (Func shortParams newBody fGEnv fLEnvs)
 
 evalUnary :: UnOp -> Expr -> Interpreter Expr
 evalUnary UnNeg x = do
